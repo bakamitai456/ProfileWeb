@@ -78,23 +78,70 @@
             @keyframes blink {
               67% { opacity: 0 }
             }
+            .break-word {
+              word-wrap: break-word;
+            }
         </style>
     </head>
     <body onload="document.getElementById('command').focus()" >
         <div class="container" ng-app>
-            <div class="row">
-                login as: Warit
-            </div>  
-            <div class="row">
-                Warit@Profile's password: 
+            <div id="content">
+                <div class="row">
+                    login as: Warit
+                </div>  
+                <div class="row">
+                    Warit@Profile's password: 
+                </div>
+                <div class="row">
+                    Type 'help' for more information.
+                </div>
             </div>
             <div class="row">
-                [Warit@Profile ~]$ <span ng-bind="sname"></span><span class="blink">_</span>
+                [Warit@Profile ~]$ <span ng-bind="sname" class="break-word" id="commandtext"></span><span class="blink">_</span>
             </div>
-            <input class="noselect" type="text" ng-model="sname" id="command" onblur="this.focus()" unselectable="on" />
+            <input class="noselect" type="text" ng-model="sname" id="command" onblur="this.focus()" 
+                unselectable="on" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" 
+                maxlength="70" onkeypress="sendCommand(event)"/>
         </div>
         <script type="text/javascript">
+
             $('#command').css("cursor","default");
+
+            function send(command){
+                $.ajax({
+                    url: "sendCommand",
+                    type: "GET",
+                    timeout: 3000,
+                    data: {
+                        "text": command,
+                    },
+                    dataType: "text",
+                    success: function (data,status) {
+                        insertLine(data);
+                    },
+                    error: function (response) {
+                        insertLine("Connection Timeout. Command is " + command + ".");
+                    }            
+                })
+            };
+
+            function sendCommand(e) {
+                if (e.keyCode == 13) {
+                    var text = '[Warit@Profile ~]$ ';
+                    text += $('#commandtext').html();
+                    insertLine(text);
+                    send($('#command').val());
+                    $('#commandtext').html("");
+                    $('#command').val("");
+                }else{
+                    return e;
+                }
+            }
+
+            function insertLine(text){
+                var value = "<div class='row'>" + text + "</div>"
+                $('#content').html($('#content').html() + value);
+            }
         </script>
     </body>
 </html>
